@@ -7,7 +7,7 @@ const options = {
         openapi: '3.0.0',
         info: {
             description: 'Infinite Canvas API documentation',
-            title: 'Highway',
+            title: 'Infinite Canvas',
             version: '0.0.1'
         }
     }
