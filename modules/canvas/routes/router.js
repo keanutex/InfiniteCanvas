@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const { poolPromise } = require('../../../db')
+const { poolPromise } = require('../../../db');
+const { Int, VarChar } = require('mssql/msnodesqlv8');
+
 
 /**
  * @swagger
@@ -42,7 +44,20 @@ router.get('/boardState', async (req, res) => {
  *        200:
  *          description: Success
  */
-router.put('/drawPixel', (req, res) => {
+router.put('/drawPixel', async (req, res) => {
+    try {
+        const pool = await poolPromise;
+        const result = await pool.request()
+            .input('x', Int, req.body.x)
+            .input('y', Int, req.body.y)
+            .input('colour', VarChar, req.body.colour)
+            .query(`UPDATE "T-1-1000-1-1000" SET colour = @colour WHERE x = @x AND @y = y`)
+
+        res.json(result.recordset)
+    } catch (err) {
+        res.status(500)
+        res.send(err.message)
+    }
 
 });
 
