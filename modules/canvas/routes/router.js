@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const sql = require("mssql/msnodesqlv8");
+const { poolPromise } = require('../../../db')
 
 /**
  * @swagger
@@ -13,40 +13,17 @@ const sql = require("mssql/msnodesqlv8");
  *        200:
  *          description: Success
  */
-router.get('/boardState', (req, res) => {
+router.get('/boardState', async (req, res) => {
+    try {
+        const pool = await poolPromise;
+        const result = await pool.request()
+            .query(`SELECT * from "T-1-1000-1-1000" WHERE x = 2`)
 
-    console.log("here")
-
-    // config for your database
-    var config = {
-        driver: "msnodesqlv8",
-        server: 'KEANUT',
-        database: 'InfiniteCanvasDatabase',
-        options: {
-            trustedConnection: true,
-            useUTC: true
-        }
-    };
-
-    // connect to your database
-    sql.connect(config, function (err) {
-
-        if (err) console.log(err);
-
-        // create Request object
-        var request = new sql.Request();
-
-        // query to the database and get the records
-        request.query(`select * from "T-1-1000-1-1000"`, function (err, recordset) {
-
-            if (err) console.log(err)
-
-            // send records as a response
-            res.send(recordset);
-
-        });
-    });
-
+        res.json(result.recordset)
+    } catch (err) {
+        res.status(500)
+        res.send(err.message)
+    }
 });
 
 /**
