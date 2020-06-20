@@ -1,16 +1,13 @@
 const express = require('express');
 const router = express.Router();
+const { poolPromise } = require('../../../db');
+const { Int, VarChar } = require('mssql/msnodesqlv8');
 
 
 /**
  * @swagger
- * /boardState:
+ * /canvas/boardState:
  *    get:
- *      requestBody:
- *        required: true
- *        content:
- *          application/json:
- *              schema: {}
  *      tags:
  *          - Canvas
  *      summary: Gets the board state around the given co-ordinate
@@ -18,14 +15,23 @@ const router = express.Router();
  *        200:
  *          description: Success
  */
-router.get('/boardState', (req, res) => {
+router.get('/boardState', async (req, res) => {
+    try {
+        const pool = await poolPromise;
+        const result = await pool.request()
+            .query(`SELECT * from "T-1-1000-1-1000" WHERE x = 2`)
 
+        res.json(result.recordset)
+    } catch (err) {
+        res.status(500)
+        res.send(err.message)
+    }
 });
 
 /**
  * @swagger
- * /drawPixel:
- *    get:
+ * /canvas/drawPixel:
+ *    put:
  *      requestBody:
  *        required: true
  *        content:
@@ -38,7 +44,20 @@ router.get('/boardState', (req, res) => {
  *        200:
  *          description: Success
  */
-router.put('/drawPixel', (req, res) => {
+router.put('/drawPixel', async (req, res) => {
+    try {
+        const pool = await poolPromise;
+        const result = await pool.request()
+            .input('x', Int, req.body.x)
+            .input('y', Int, req.body.y)
+            .input('colour', VarChar, req.body.colour)
+            .query(`UPDATE "T-1-1000-1-1000" SET colour = @colour WHERE x = @x AND @y = y`)
+
+        res.json(result.recordset)
+    } catch (err) {
+        res.status(500)
+        res.send(err.message)
+    }
 
 });
 
