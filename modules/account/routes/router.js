@@ -3,7 +3,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /login:
+ * /account/login:
  *    post:
  *      requestBody:
  *        required: true
@@ -23,7 +23,7 @@ router.post('/login', (req, res) => {
 
 /**
  * @swagger
- * /createAccount:
+ * /account/createAccount:
  *    post:
  *      requestBody:
  *        required: true

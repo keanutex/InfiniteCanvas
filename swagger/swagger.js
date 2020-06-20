@@ -2,7 +2,6 @@ const swaggerjsDoc = require('swagger-jsdoc');
 
 const options = {
     apis: ['./**/routes/router.js'],
-    basePath: '../modules',
     swaggerDefinition: {
         openapi: '3.0.0',
         info: {
