@@ -1,16 +1,8 @@
 const sql = require('mssql/msnodesqlv8')
+const secrets = require('../secrets')
 // config for your database
-const config = {
-    driver: "msnodesqlv8",
-    server: 'KEANUT',
-    database: 'InfiniteCanvasDatabase',
-    options: {
-        trustedConnection: true,
-        useUTC: true
-    }
-};
 
-const poolPromise = new sql.ConnectionPool(config)
+const poolPromise = new sql.ConnectionPool(secrets)
     .connect()
     .then(pool => {
         console.log('Connected to MSSQL')

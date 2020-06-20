@@ -10,3 +10,4 @@ node_modules/**/
 .idea/httpRequests/
 
 swagger/components.yaml
+secrets.js
