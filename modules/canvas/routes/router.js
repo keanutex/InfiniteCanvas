@@ -27,7 +27,7 @@ router.get('/boardState', async (req, res) => {
         }
         pixelstring += result.recordset[result.recordset.length-1].colour
 
-        res.json(pixelstring)
+        res.json({colour:pixelstring})
     } catch (err) {
         res.status(500)
         res.send(err.message)
