@@ -1,41 +1,51 @@
+const redis = require('./redis');
+
 require('dotenv-flow').config({
     default_node_env: 'development'
 });
 
-const bodyParser = require('body-parser');
-const canvasModule = require('./modules/canvas');
-const accountModule = require('./modules/account');
-const swaggerUi = require('swagger-ui-express');
-const specs = require('./swagger/swagger');
-const express = require('express');
-const app = express();
-app.use(bodyParser.json());
+async function startUp() {
 
-const { reqLogger, resLogger, errLogger } = require('./logging');
-app.use((req, res, next) => {
-    res.once("finish", () => {
-        resLogger.info({ res, req }, "outgoing response");
+    const bodyParser = require('body-parser');
+    const canvasModule = require('./modules/canvas');
+    const accountModule = require('./modules/account');
+    const swaggerUi = require('swagger-ui-express');
+    const specs = require('./swagger/swagger');
+    const express = require('express');
+    const app = express();
+
+    await redis.loadDbIntoRedis();
+
+    app.use(bodyParser.json());
+
+    const { reqLogger, resLogger, errLogger } = require('./logging');
+    app.use((req, res, next) => {
+        res.once("finish", () => {
+            resLogger.info({ res, req }, "outgoing response");
+        });
+        next();
     });
-    next();
-});
-app.use((req, res, next) => {
-    reqLogger.info({ req }, "incoming request");
-    next();
-});
+    app.use((req, res, next) => {
+        reqLogger.info({ req }, "incoming request");
+        next();
+    });
 
 
-app.use('/swagger-ui', swaggerUi.serve, swaggerUi.setup(specs));
-app.use('/account', accountModule(app));
-app.use('/canvas', canvasModule(app));
+    app.use('/swagger-ui', swaggerUi.serve, swaggerUi.setup(specs));
+    app.use('/account', accountModule(app));
+    app.use('/canvas', canvasModule(app));
 
-app.use((err, req, res, next) => {
-    errLogger.error({ err }, "server error occurred");
-    if (res.statusCode == 500)
-        res.json({ message: "Internal server error" });
-    if (res.statusCode == 404)
-        res.json({ message: "Resource Not Found" })
-    next();
-});
+    app.use((err, req, res, next) => {
+        errLogger.error({ err }, "server error occurred");
+        if (res.statusCode == 500)
+            res.json({ message: "Internal server error" });
+        if (res.statusCode == 404)
+            res.json({ message: "Resource Not Found" })
+        next();
+    });
 
-app.listen(process.env.PORT);
+    app.listen(process.env.PORT);
 
+}
+
+startUp()

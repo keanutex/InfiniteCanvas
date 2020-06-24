@@ -4,7 +4,6 @@ const { poolPromise } = require('../../../db');
 const { Int, VarChar } = require('mssql/msnodesqlv8');
 const redis = require("async-redis");
 const client = redis.createClient();
-var pixelstring;
 
 /**
  * @swagger
@@ -19,19 +18,8 @@ var pixelstring;
  */
 router.get('/boardState', async (req, res) => {
     try {
-        pixelstring = await client.get("pixelstring")
-        if (pixelstring == null || pixelstring == '') {
-            pixelstring = ''
-            const pool = await poolPromise;
-            const result = await pool.request()
-                .query(`SELECT colour from "T-1-1000-1-1000"`)
-            
-            for (i = 0; i < result.recordset.length; i++) {
-                pixelstring += result.recordset[i].colour
-            }
-            await client.set("pixelstring", pixelstring)
-          }
-        res.json({colour:pixelstring})
+        let pixelstring = await client.get("pixelstring")
+        res.json({ colour: pixelstring })
     } catch (err) {
         res.status(500)
         res.send(err.message)
