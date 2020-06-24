@@ -2,7 +2,9 @@ const express = require('express');
 const router = express.Router();
 const { poolPromise } = require('../../../db');
 const { Int, VarChar } = require('mssql/msnodesqlv8');
-
+const redis = require("async-redis");
+const client = redis.createClient();
+var pixelstring;
 
 /**
  * @swagger
@@ -17,16 +19,20 @@ const { Int, VarChar } = require('mssql/msnodesqlv8');
  */
 router.get('/boardState', async (req, res) => {
     try {
-        const pool = await poolPromise;
-        const result = await pool.request()
-            .query(`SELECT colour from "T-1-1000-1-1000"`)
+        pixelstring = await client.get("pixelstring")
+        if (pixelstring == null || pixelstring == '') {
+            pixelstring = ''
+            const pool = await poolPromise;
+            const result = await pool.request()
+                .query(`SELECT colour from "T-1-1000-1-1000"`)
+            
+            for (i = 0; i < result.recordset.length-1; i++) {
+                pixelstring += result.recordset[i].colour
+            }
 
-        var pixelstring = "";
-        for (i = 0; i < result.recordset.length-1; i++) {
-            pixelstring += result.recordset[i].colour + ' '
-        }
-        pixelstring += result.recordset[result.recordset.length-1].colour
-
+            pixelstring += result.recordset[result.recordset.length-1].colour
+            await client.set("pixelstring", pixelstring)
+          }
         res.json({colour:pixelstring})
     } catch (err) {
         res.status(500)
