@@ -1,8 +1,13 @@
 const sql = require('mssql/msnodesqlv8')
 const secrets = require('../secrets')
 // config for your database
-
-const poolPromise = new sql.ConnectionPool(secrets)
+var dbConfig = {
+    server: 'weblevelup.database.windows.net',
+    database: 'InfiniteCanvasDatabase',
+    user: 'keanutex',
+    password: '7WNkm8szwsdksMU'
+};
+const poolPromise = new sql.ConnectionPool(dbConfig)
     .connect()
     .then(pool => {
         console.log('Connected to MSSQL')
