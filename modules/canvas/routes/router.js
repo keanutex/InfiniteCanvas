@@ -19,9 +19,15 @@ router.get('/boardState', async (req, res) => {
     try {
         const pool = await poolPromise;
         const result = await pool.request()
-            .query(`SELECT * from "T-1-1000-1-1000" WHERE x = 2`)
+            .query(`SELECT colour from "T-1-1000-1-1000"`)
 
-        res.json(result.recordset)
+        var pixelstring = "";
+        for (i = 0; i < result.recordset.length-1; i++) {
+            pixelstring += result.recordset[i].colour + ' '
+        }
+        pixelstring += result.recordset[result.recordset.length-1].colour
+
+        res.json({colour:pixelstring})
     } catch (err) {
         res.status(500)
         res.send(err.message)
