@@ -4,7 +4,7 @@ const { poolPromise } = require('../db');
 
 async function loadDbIntoRedis() {
     let pixelstring = await client.get("pixelstring")
-    //if (pixelstring == null || pixelstring == '') { add back in when deployed
+    //if (pixelstring == null || pixelstring == '') {
     pixelstring = ''
     const pool = await poolPromise;
     const result = await pool.request()
