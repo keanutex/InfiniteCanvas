@@ -64,5 +64,37 @@ router.put('/drawPixel', async (req, res) => {
     }
 });
 
+/**
+ * @swagger
+ * /canvas/getPixelInfo:
+ *    post:
+ *      requestBody:
+ *        required: true
+ *        content:
+ *          application/json:
+ *              schema: {}
+ *      tags:
+ *          - Canvas
+ *      summary: Updates a co-ordinate with a colour
+ *      responses:
+ *        200:
+ *          description: Success
+ */
+router.post('/getPixelInfo', async (req, res) => {
+    try {
+        const pool = await poolPromise;
+        const result = await pool.request()
+            .input('x', Int, req.body.x)
+            .input('y', Int, req.body.y)
+            .query(`SELECT canvas.colour, canvas.userId, users.username FROM "T-1-1000-1-1000" as canvas JOIN users ON users."userId" = canvas."userId"  WHERE x = @x AND y = @y`)
+        res.json(result.recordset[0])
+    } catch (err) {
+        res.status(500)
+        res.send(err.message)
+    }
+});
+
+
+
 
 module.exports = router;
