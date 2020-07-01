@@ -3,12 +3,6 @@ const router = express.Router();
 const { poolPromise } = require('../../../db');
 const { Int, VarChar } = require('mssql/msnodesqlv8');
 
-//***************************** Configuraion for sql connection
-var sql = require("mssql");
-const config = {
-//enter config
-};
-
 
 //***************************** Configuraion for encription
 
@@ -32,43 +26,40 @@ const cryptr = new Cryptr('myTotalySecretKey');
  *        200:
  *          description: Success
  */
-router.post('/signin', (req, res) => {
+router.post('/signin', async (req, res) => {
     let username = req.body.username;
     let password = req.body.password;
+
     let AUTH_USER = `SELECT PASSWORD FROM USERS WHERE USERNAME = '${username}';`;
+    const pool = await poolPromise;
 
-    sql.connect(config, function (err) {
-        let request = new sql.Request();
-        let passwordReps = '';
-
-        request.query(AUTH_USER, function (err, recordset) {
-            if (recordset != null && recordset.recordset[0] != null) {
-                passwordReps = recordset.recordset[0].PASSWORD.toString();
-                try {
-                    console.log(passwordReps);
-                    passwordReps = cryptr.decrypt(passwordReps);
-                    console.log(passwordReps);
-                }
-                catch (ex) {
-                    console.log(ex);
-                    res.status(500).send();
-                    return;
-                }
-                if (password == passwordReps) {
-                    res.status(200).send();
-                    console.log('Logged in...');
-                }
+    let passwordReps = '';
+    pool.request.query(AUTH_USER, function (err, recordset) {
+        if (recordset != null && recordset.recordset[0] != null) {
+            passwordReps = recordset.recordset[0].PASSWORD.toString();
+            try {
+                console.log(passwordReps);
+                passwordReps = cryptr.decrypt(passwordReps);
+                console.log(passwordReps);
             }
-
-            else {
-                console.log(err);
+            catch (ex) {
+                console.log(ex);
                 res.status(500).send();
-                console.log(recordset);
-                console.log('Error occourred, be better...');
+                return;
             }
-        });
-    });
+            if (password == passwordReps) {
+                res.status(200).send();
+                console.log('Logged in...');
+            }
+        }
 
+        else {
+            console.log(err);
+            res.status(500).send();
+            console.log(recordset);
+            console.log('Error occourred, be better...');
+        }
+    });
 });
 
 /**
@@ -87,30 +78,24 @@ router.post('/signin', (req, res) => {
  *        200:
  *          description: Success
  */
-router.post('/register', (req, res) => {
+router.post('/register', async (req, res) => {
     let reqBody = req.body;
     let password = cryptr.encrypt(reqBody.password);
     let username = reqBody.username;
     let email = reqBody.email;
 
     let INSERT_USERS = `INSERT INTO USERS (EMAIL, PASSWORD, USERNAME, TYPEID, STATUSID) VALUES ('${email}', '${password}', '${username}', 1, 1);`;
-    sql.connect(config, function (err) {
+    const pool = await poolPromise;
 
-        if (err) console.log(err);
-
-        // create Request object
-        var request = new sql.Request();
-
-        // Insert user into database
-        request.query(INSERT_USERS, function (err, recordset) {
-            if (err) {
-                console.log(err)
-            }
-            else {
-                res.status(200).send();
-                console.log('Registered successfully');
-            }
-        });
+    // Insert user into database
+    pool.request.query(INSERT_USERS, function (err, recordset) {
+        if (err) {
+            console.log(err)
+        }
+        else {
+            res.status(200).send();
+            console.log('Registered successfully');
+        }
     });
 
 });
@@ -156,7 +141,7 @@ router.post('/getAllUsers', async (req, res) => {
             const pool = await poolPromise;
             const result = await pool.request()
                 .execute('getUserProc');
-            
+
             if (result.recordset.length > 0) {
                 res.send(result.recordset);
             }
@@ -196,7 +181,7 @@ router.post('/setUserAdmin', async (req, res) => {
                 .input('userId', Int, req.body.userId)
                 .execute('setAdminProc');
 
-            if(result.rowsAffected[0] === 1)
+            if (result.rowsAffected[0] === 1)
                 res.send({ "success": "User is now an admin" });
         } else {
             res.status(500);
@@ -233,7 +218,7 @@ router.post('/removeUserAdmin', async (req, res) => {
                 .input('userId', Int, req.body.userId)
                 .execute('demoteAdminProc');
 
-            if(result.rowsAffected[0] === 1)
+            if (result.rowsAffected[0] === 1)
                 res.send({ "success": "User has been demoted" });
         } else {
             res.status(500)
@@ -269,8 +254,8 @@ router.post('/banUser', async (req, res) => {
             const result = await pool.request()
                 .input('userId', Int, req.body.userId)
                 .execute('banUserProc');
-            
-            if(result.rowsAffected[0] === 1)
+
+            if (result.rowsAffected[0] === 1)
                 res.send({ "success": "User has been banned" });
         } else {
             res.status(500);
@@ -307,7 +292,7 @@ router.post('/unbanUser', async (req, res) => {
                 .input('userId', Int, req.body.userId)
                 .execute('unbanUserProc');
 
-            if(result.rowsAffected[0] === 1)
+            if (result.rowsAffected[0] === 1)
                 res.send({ "success": "User has been unbanned" });
         } else {
             res.status(500);
