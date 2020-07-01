@@ -12,6 +12,7 @@
   "license": "ISC",
   "dependencies": {
     "@hapi/joi": "^17.1.1",
+    "async-redis": "^1.1.7",
     "bunyan": "^1.8.12",
     "cors": "^2.8.5",
     "cryptr": "^6.0.2",
