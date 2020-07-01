@@ -9,6 +9,8 @@ const swaggerUi = require('swagger-ui-express');
 const specs = require('./swagger/swagger');
 const express = require('express');
 const app = express();
+const cors = require('cors');
+app.use(cors());
 app.use(bodyParser.json());
 
 const { reqLogger, resLogger, errLogger } = require('./logging');
