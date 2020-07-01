@@ -11,7 +11,7 @@ const client = redis.createClient();
  *    get:
  *      tags:
  *          - Canvas
- *      summary: Gets the board state around the given co-ordinate
+ *      summary: Gets the board state
  *      responses:
  *        200:
  *          description: Success
@@ -75,7 +75,7 @@ router.put('/drawPixel', async (req, res) => {
  *              schema: {}
  *      tags:
  *          - Canvas
- *      summary: Updates a co-ordinate with a colour
+ *      summary: Get info about a pixel
  *      responses:
  *        200:
  *          description: Success
