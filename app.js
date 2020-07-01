@@ -5,8 +5,7 @@ require('dotenv-flow').config({
 });
 
 async function startUp() {
-app.use(cors());
-app.use(bodyParser.json());
+
 
     const bodyParser = require('body-parser');
     const canvasModule = require('./modules/canvas');
@@ -15,9 +14,10 @@ app.use(bodyParser.json());
     const specs = require('./swagger/swagger');
     const express = require('express');
     const app = express();
-
+    const cors = require('cors');
     await redis.loadDbIntoRedis();
 
+    app.use(cors());
     app.use(bodyParser.json());
 
     const { reqLogger, resLogger, errLogger } = require('./logging');
