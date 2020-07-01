@@ -49,11 +49,12 @@ router.put('/drawPixel', async (req, res) => {
             .input('x', Int, req.body.x)
             .input('y', Int, req.body.y)
             .input('colour', VarChar, req.body.colour)
-            .query(`UPDATE "T-1-1000-1-1000" SET colour = @colour WHERE x = @x AND @y = y`)
+            .input('userId', Int, req.body.userId)
+            .query(`UPDATE "T-1-1000-1-1000" SET colour = @colour, "userId" = @userId WHERE x = @x AND y = @y`)
 
         let pixelstring = await client.get("pixelstring")
-        var offset = (req.body.x - 1) * 1000 + (req.body.y-1)*4
-        pixelstring = pixelstring.substring(0, offset) + req.body.colour + pixelstring.substring(offset+4, pixelstring.length);
+        var offset = (req.body.x - 1) * 1000 + (req.body.y - 1) * 4
+        pixelstring = pixelstring.substring(0, offset) + req.body.colour + pixelstring.substring(offset + 4, pixelstring.length);
         await client.set('pixelstring', pixelstring)
 
         res.json(result.recordset)
@@ -61,7 +62,6 @@ router.put('/drawPixel', async (req, res) => {
         res.status(500)
         res.send(err.message)
     }
-
 });
 
 
