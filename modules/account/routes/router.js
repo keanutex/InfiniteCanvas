@@ -30,36 +30,44 @@ router.post('/signin', async (req, res) => {
     let username = req.body.username;
     let password = req.body.password;
 
-    let AUTH_USER = `SELECT PASSWORD FROM USERS WHERE USERNAME = '${username}';`;
+    let AUTH_USER = `SELECT PASSWORD FROM USERS WHERE USERNAME = @username;`;
     const pool = await poolPromise;
 
     let passwordReps = '';
-    pool.request.query(AUTH_USER, function (err, recordset) {
-        if (recordset != null && recordset.recordset[0] != null) {
-            passwordReps = recordset.recordset[0].PASSWORD.toString();
-            try {
-                console.log(passwordReps);
-                passwordReps = cryptr.decrypt(passwordReps);
-                console.log(passwordReps);
-            }
-            catch (ex) {
-                console.log(ex);
-                res.status(500).send();
-                return;
-            }
+
+    try {
+        const pool = await poolPromise;
+
+        const result = await pool.request()
+            .input('username', VarChar, username)
+            .query(AUTH_USER)
+
+        console.log(result);
+
+        if (result != null && result.recordset[0] != null) {
+            passwordReps = result.recordset[0].PASSWORD.toString();
+            console.log(passwordReps);
+            passwordReps = cryptr.decrypt(passwordReps);
+            console.log(passwordReps);
+            
             if (password == passwordReps) {
                 res.status(200).send();
                 console.log('Logged in...');
             }
         }
-
         else {
             console.log(err);
             res.status(500).send();
-            console.log(recordset);
+            console.log(result);
             console.log('Error occourred, be better...');
-        }
-    });
+        } 
+    }
+    catch (ex) {
+        console.log(ex);
+        res.status(500).send();
+        return;
+    }   
+    
 });
 
 /**
@@ -84,20 +92,29 @@ router.post('/register', async (req, res) => {
     let username = reqBody.username;
     let email = reqBody.email;
 
-    let INSERT_USERS = `INSERT INTO USERS (EMAIL, PASSWORD, USERNAME, TYPEID, STATUSID) VALUES ('${email}', '${password}', '${username}', 1, 1);`;
-    const pool = await poolPromise;
+    try{
+        let INSERT_USERS = `INSERT INTO USERS (EMAIL, PASSWORD, USERNAME, TYPEID, STATUSID) VALUES (@email, @password, @username, 1, 1);`;
+        const pool = await poolPromise;
 
-    // Insert user into database
-    pool.request.query(INSERT_USERS, function (err, recordset) {
-        if (err) {
-            console.log(err)
-        }
-        else {
-            res.status(200).send();
-            console.log('Registered successfully');
-        }
-    });
+        console.log("hahahaha")
 
+        const result = await pool.request()
+            .input('email', VarChar, email)
+            .input('password', VarChar, password)
+            .input('username', VarChar, username)
+            .query(INSERT_USERS)
+
+        console.log(result);
+
+        if (result.rowsAffected.length === 1) {
+            res.status(200)
+            res.send()
+        }
+    }
+    catch(err){
+        res.status(500);
+        res.send(err.message);
+    }
 });
 
 
