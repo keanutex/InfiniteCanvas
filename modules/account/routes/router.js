@@ -30,7 +30,7 @@ router.post('/signin', async (req, res) => {
     let username = req.body.username;
     let password = req.body.password;
 
-    let AUTH_USER = `SELECT PASSWORD FROM USERS WHERE USERNAME = @username;`;
+    let AUTH_USER = `SELECT PASSWORD, USERID, TYPEID, STATUSID FROM USERS WHERE USERNAME = @username;`;
     const pool = await poolPromise;
 
     let passwordReps = '';
@@ -51,7 +51,7 @@ router.post('/signin', async (req, res) => {
             console.log(passwordReps);
             
             if (password == passwordReps) {
-                res.status(200).send();
+                res.status(200).send({"userId":result.recordset[0].USERID, "typeId":result.recordset[0].TYPEID, "statusId":result.recordset[0].STATUSID});
                 console.log('Logged in...');
             }
         }
@@ -96,8 +96,6 @@ router.post('/register', async (req, res) => {
         let INSERT_USERS = `INSERT INTO USERS (EMAIL, PASSWORD, USERNAME, TYPEID, STATUSID) VALUES (@email, @password, @username, 1, 1);`;
         const pool = await poolPromise;
 
-        console.log("hahahaha")
-
         const result = await pool.request()
             .input('email', VarChar, email)
             .input('password', VarChar, password)
@@ -107,8 +105,12 @@ router.post('/register', async (req, res) => {
         console.log(result);
 
         if (result.rowsAffected.length === 1) {
+            const result = await pool.request()
+                .input('username', VarChar, username)
+                .query(`SELECT userId FROM users WHERE username = @username`)
+            
             res.status(200)
-            res.send()
+            res.send({ "userId": result.recordset[0].userId, "typeId": 1, "statusId": 1 })
         }
     }
     catch(err){
