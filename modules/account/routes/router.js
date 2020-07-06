@@ -6,10 +6,6 @@ const { Int, VarChar } = require('mssql/msnodesqlv8');
 
 //***************************** Configuraion for encription
 
-
-const Cryptr = require('cryptr');
-const cryptr = new Cryptr('myTotalySecretKey');
-
 /**
  * @swagger
  * /account/login:
@@ -27,10 +23,9 @@ const cryptr = new Cryptr('myTotalySecretKey');
  *          description: Success
  */
 router.post('/signin', async (req, res) => {
-    let username = req.body.username;
-    let password = req.body.password;
+    let email = req.body.email;
 
-    let AUTH_USER = `SELECT PASSWORD, USERID, TYPEID, STATUSID FROM USERS WHERE USERNAME = @username;`;
+    let AUTH_USER = `SELECT USERID, TYPEID, STATUSID FROM USERS WHERE email = @email;`;
     const pool = await poolPromise;
 
     let passwordReps = '';
@@ -39,21 +34,14 @@ router.post('/signin', async (req, res) => {
         const pool = await poolPromise;
 
         const result = await pool.request()
-            .input('username', VarChar, username)
+            .input('email', VarChar, email)
             .query(AUTH_USER)
 
         console.log(result);
 
         if (result != null && result.recordset[0] != null) {
-            passwordReps = result.recordset[0].PASSWORD.toString();
-            console.log(passwordReps);
-            passwordReps = cryptr.decrypt(passwordReps);
-            console.log(passwordReps);
-            
-            if (password == passwordReps) {
                 res.status(200).send({"userId":result.recordset[0].USERID, "typeId":result.recordset[0].TYPEID, "statusId":result.recordset[0].STATUSID});
                 console.log('Logged in...');
-            }
         }
         else {
             console.log(err);
@@ -88,17 +76,15 @@ router.post('/signin', async (req, res) => {
  */
 router.post('/register', async (req, res) => {
     let reqBody = req.body;
-    let password = cryptr.encrypt(reqBody.password);
     let username = reqBody.username;
     let email = reqBody.email;
 
     try{
-        let INSERT_USERS = `INSERT INTO USERS (EMAIL, PASSWORD, USERNAME, TYPEID, STATUSID) VALUES (@email, @password, @username, 1, 1);`;
+        let INSERT_USERS = `INSERT INTO USERS (EMAIL, USERNAME, TYPEID, STATUSID) VALUES (@email, @username, 1, 1);`;
         const pool = await poolPromise;
 
         const result = await pool.request()
             .input('email', VarChar, email)
-            .input('password', VarChar, password)
             .input('username', VarChar, username)
             .query(INSERT_USERS)
 
