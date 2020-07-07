@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { poolPromise } = require('../../../db');
-const { Int, VarChar } = require('mssql/msnodesqlv8');
+const { Int, TinyInt } = require('mssql/msnodesqlv8');
 const redis = require("async-redis");
 const client = redis.createClient();
 
@@ -18,8 +18,8 @@ const client = redis.createClient();
  */
 router.get('/boardState', async (req, res) => {
     try {
-        let pixelstring = await client.get("pixelstring")
-        res.json({ colour: pixelstring })
+        let colourarray = await client.get("colourarray")
+        res.json({ colour: colourarray })
     } catch (err) {
         res.status(500)
         res.send(err.message)
@@ -48,14 +48,19 @@ router.put('/drawPixel', async (req, res) => {
         const result = await pool.request()
             .input('x', Int, req.body.x)
             .input('y', Int, req.body.y)
-            .input('colour', VarChar, req.body.colour)
+            .input('r', TinyInt, req.body.r)
+            .input('g', TinyInt, req.body.g)
+            .input('b', TinyInt, req.body.b)
             .input('userId', Int, req.body.userId)
-            .query(`UPDATE "T-1-1000-1-1000" SET colour = @colour, "userId" = @userId WHERE x = @x AND y = @y`)
+            .query(`UPDATE "T-1-1000-1-1000" SET r = @r,g = @g,b = @b, "userId" = @userId WHERE x = @x AND y = @y`)
 
-        let pixelstring = await client.get("pixelstring")
-        var offset = (req.body.x - 1) * 1000 + (req.body.y - 1) * 4
-        pixelstring = pixelstring.substring(0, offset) + req.body.colour + pixelstring.substring(offset + 4, pixelstring.length);
-        await client.set('pixelstring', pixelstring)
+        let colourarray = await client.get("colourarray");
+        var offset = (req.body.x - 1) * 1000 + (req.body.y - 1) * 4;
+
+        colourarray[offset] = req.body.r;
+        colourarray[offset + 1] = req.body.g;
+        colourarray[offset + 2] = req.body.b;
+        await client.set('pixelstring', colourarray)
 
         res.json(result.recordset)
     } catch (err) {
