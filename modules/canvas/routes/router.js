@@ -53,12 +53,19 @@ router.put('/drawPixel', async (req, res) => {
             .input('g', TinyInt, req.body.g)
             .input('b', TinyInt, req.body.b)
             .input('userId', Int, req.body.userId)
-            .query(`UPDATE "T-1-1000-1-1000" SET r = @r,g = @g,b = @b, "userId" = @userId WHERE x = @x AND y = @y`)
+            .query(`UPDATE "T-1-1000-1-1000" SET r = @r,g = @g,b = @b, userId = @userId WHERE x = @x AND y = @y`)
+
+        console.log(req.body.x);
+        console.log(req.body.y);
 
         let colourarray = await client.get('colourarray');
         redistoarray = colourarray.split(" ").map( Number )
 
-        var offset = (req.body.x - 1) * 1000 + (req.body.y - 1) * 3;
+        var a = (req.body.x - 1) * 1000;
+        var b = (req.body.y - 1);
+
+        //var offset = ((req.body.x - 1) * 1000) + ((req.body.y - 1) * 3);
+        var offset = (a + b)* 3
 
         redistoarray[offset] = req.body.r;
         redistoarray[offset + 1] = req.body.g;
@@ -70,9 +77,14 @@ router.put('/drawPixel', async (req, res) => {
         }
         colourarray += redistoarray[redistoarray.length-1]
 
+        console.log(colourarray);
+
         await client.set('colourarray', colourarray)
 
-        res.json(result.recordset)
+        console.log(result);
+
+
+        res.json(result)
     } catch (err) {
         res.status(500)
         res.send(err.message)
@@ -102,6 +114,7 @@ router.post('/getPixelInfo', async (req, res) => {
             .input('x', Int, req.body.x)
             .input('y', Int, req.body.y)
             .query(`SELECT canvas.r, canvas.g, canvas.b, canvas.userId, users.username FROM "T-1-1000-1-1000" as canvas JOIN users ON users."userId" = canvas."userId"  WHERE x = @x AND y = @y`)
+
         res.json(result.recordset[0])
     } catch (err) {
         res.status(500)
