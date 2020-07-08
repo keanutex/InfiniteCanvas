@@ -18,8 +18,9 @@ const client = redis.createClient();
  */
 router.get('/boardState', async (req, res) => {
     try {
-        let colourarray = await client.get("colourarray")
-        res.json({ colour: colourarray })
+        let colourarray = await client.get('colourarray')   
+        redistoarray = colourarray.split(" ").map( Number )
+        res.json({ colour: redistoarray })
     } catch (err) {
         res.status(500)
         res.send(err.message)
@@ -54,13 +55,22 @@ router.put('/drawPixel', async (req, res) => {
             .input('userId', Int, req.body.userId)
             .query(`UPDATE "T-1-1000-1-1000" SET r = @r,g = @g,b = @b, "userId" = @userId WHERE x = @x AND y = @y`)
 
-        let colourarray = await client.get("colourarray");
-        var offset = (req.body.x - 1) * 1000 + (req.body.y - 1) * 4;
+        let colourarray = await client.get('colourarray');
+        redistoarray = colourarray.split(" ").map( Number )
 
-        colourarray[offset] = req.body.r;
-        colourarray[offset + 1] = req.body.g;
-        colourarray[offset + 2] = req.body.b;
-        await client.set('pixelstring', colourarray)
+        var offset = (req.body.x - 1) * 1000 + (req.body.y - 1) * 3;
+
+        redistoarray[offset] = req.body.r;
+        redistoarray[offset + 1] = req.body.g;
+        redistoarray[offset + 2] = req.body.b;
+
+        colourarray = ''
+        for (let i = 0; i < redistoarray.length-1; i++) {
+            colourarray += redistoarray[i] + ' '
+        }
+        colourarray += redistoarray[redistoarray.length-1]
+
+        await client.set('colourarray', colourarray)
 
         res.json(result.recordset)
     } catch (err) {
@@ -91,7 +101,7 @@ router.post('/getPixelInfo', async (req, res) => {
         const result = await pool.request()
             .input('x', Int, req.body.x)
             .input('y', Int, req.body.y)
-            .query(`SELECT canvas.colour, canvas.userId, users.username FROM "T-1-1000-1-1000" as canvas JOIN users ON users."userId" = canvas."userId"  WHERE x = @x AND y = @y`)
+            .query(`SELECT canvas.r, canvas.g, canvas.b, canvas.userId, users.username FROM "T-1-1000-1-1000" as canvas JOIN users ON users."userId" = canvas."userId"  WHERE x = @x AND y = @y`)
         res.json(result.recordset[0])
     } catch (err) {
         res.status(500)
