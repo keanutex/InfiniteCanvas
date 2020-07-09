@@ -55,6 +55,8 @@ router.put('/drawPixel', async (req, res) => {
             .input('userId', Int, req.body.userId)
             .query(`UPDATE "T-1-1000-1-1000" SET r = @r,g = @g,b = @b, userId = @userId WHERE x = @x AND y = @y`)
 
+        res.json(result.recordset)
+
         let colourarray = await client.get('colourarray');
         let redistoarray = colourarray.split(" ").map(Number)
 
@@ -69,9 +71,7 @@ router.put('/drawPixel', async (req, res) => {
             colourarray += redistoarray[i] + ' '
         }
         colourarray += redistoarray[redistoarray.length - 1]
-        await client.set('colourarray', colourarray)
-
-        res.json(result.recordset)
+        await client.set('colourarray', colourarray)   
 
     } catch (err) {
         res.status(500)
