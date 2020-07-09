@@ -47,6 +47,12 @@ router.get('/boardState', async (req, res) => {
 router.put('/drawPixel', async (req, res) => {
     try {
         const pool = await poolPromise;
+
+        if (await common.isBlocked(req.body.userId)) {
+            res.status(403).send({ message: "User is blocked" })
+            return;
+        }
+
         let result = await pool.request()
             .input('x', Int, req.body.x)
             .input('y', Int, req.body.y)
@@ -55,11 +61,6 @@ router.put('/drawPixel', async (req, res) => {
             .input('b', TinyInt, req.body.b)
             .input('userId', Int, req.body.userId)
             .query(`UPDATE "T-1-1000-1-1000" SET r = @r,g = @g,b = @b, userId = @userId WHERE x = @x AND y = @y`)
-
-        if (await common.isBlocked) {
-            res.status(403).send({ message: "User is blocked" })
-            return;
-        }
 
         res.json(result.recordset)
 

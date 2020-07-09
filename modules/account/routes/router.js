@@ -24,9 +24,6 @@ router.post('/signin', async (req, res) => {
     let email = req.body.email;
 
     let AUTH_USER = `SELECT USERID, TYPEID, STATUSID FROM USERS WHERE email = @email;`;
-    const pool = await poolPromise;
-
-    let passwordReps = '';
 
     try {
         const pool = await poolPromise;
@@ -42,7 +39,6 @@ router.post('/signin', async (req, res) => {
             console.log('Logged in...');
         }
         else {
-            console.log(err);
             res.status(500).send();
             console.log(result);
             console.log('Error occourred, be better...');
