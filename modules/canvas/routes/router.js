@@ -18,8 +18,8 @@ const client = redis.createClient();
  */
 router.get('/boardState', async (req, res) => {
     try {
-        let colourarray = await client.get('colourarray')   
-        redistoarray = colourarray.split(" ").map( Number )
+        let colourarray = await client.get('colourarray')
+        redistoarray = colourarray.split(" ").map(Number)
         res.json({ colour: redistoarray })
     } catch (err) {
         res.status(500)
@@ -55,34 +55,21 @@ router.put('/drawPixel', async (req, res) => {
             .input('userId', Int, req.body.userId)
             .query(`UPDATE "T-1-1000-1-1000" SET r = @r,g = @g,b = @b, userId = @userId WHERE x = @x AND y = @y`)
 
-        console.log(req.body.x);
-        console.log(req.body.y);
-
         let colourarray = await client.get('colourarray');
-        redistoarray = colourarray.split(" ").map( Number )
+        let redistoarray = colourarray.split(" ").map(Number)
 
-        var a = (req.body.x - 1) * 1000;
-        var b = (req.body.y - 1);
-
-        //var offset = ((req.body.x - 1) * 1000) + ((req.body.y - 1) * 3);
-        var offset = (a + b)* 3
+        var offset = ((req.body.x - 1) * 1000) + ((req.body.y - 1) * 3);
 
         redistoarray[offset] = req.body.r;
         redistoarray[offset + 1] = req.body.g;
         redistoarray[offset + 2] = req.body.b;
 
         colourarray = ''
-        for (let i = 0; i < redistoarray.length-1; i++) {
+        for (let i = 0; i < redistoarray.length - 1; i++) {
             colourarray += redistoarray[i] + ' '
         }
-        colourarray += redistoarray[redistoarray.length-1]
-
-        console.log(colourarray);
-
+        colourarray += redistoarray[redistoarray.length - 1]
         await client.set('colourarray', colourarray)
-
-        console.log(result);
-
 
         res.json(result)
     } catch (err) {
