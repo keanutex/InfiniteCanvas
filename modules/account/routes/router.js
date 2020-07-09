@@ -3,9 +3,6 @@ const router = express.Router();
 const { poolPromise } = require('../../../db');
 const { Int, VarChar } = require('mssql/msnodesqlv8');
 
-
-//***************************** Configuraion for encription
-
 /**
  * @swagger
  * /account/login:
@@ -40,22 +37,22 @@ router.post('/signin', async (req, res) => {
         console.log(result);
 
         if (result != null && result.recordset[0] != null) {
-                res.status(200).send({"userId":result.recordset[0].USERID, "typeId":result.recordset[0].TYPEID, "statusId":result.recordset[0].STATUSID});
-                console.log('Logged in...');
+            res.status(200).send({ "userId": result.recordset[0].USERID, "typeId": result.recordset[0].TYPEID, "statusId": result.recordset[0].STATUSID });
+            console.log('Logged in...');
         }
         else {
             console.log(err);
             res.status(500).send();
             console.log(result);
             console.log('Error occourred, be better...');
-        } 
+        }
     }
     catch (ex) {
         console.log(ex);
         res.status(500).send();
         return;
-    }   
-    
+    }
+
 });
 
 /**
@@ -74,12 +71,30 @@ router.post('/signin', async (req, res) => {
  *        200:
  *          description: Success
  */
+
+router.post('/users', async (req, res) => {
+    try {
+        let available = await verifyUsername(req.body.username);
+        if (available) {
+            res.status(200);
+            res.send();
+        }
+        else {
+            res.status(204);
+            res.send({msg:'User Taken'});
+        }
+    }
+    catch (error) {
+        res.status(500);
+    }
+})
+
 router.post('/register', async (req, res) => {
     let reqBody = req.body;
     let username = reqBody.username;
     let email = reqBody.email;
 
-    try{
+    try {
         let INSERT_USERS = `INSERT INTO USERS (EMAIL, USERNAME, TYPEID, STATUSID) VALUES (@email, @username, 1, 1);`;
         const pool = await poolPromise;
 
@@ -94,12 +109,12 @@ router.post('/register', async (req, res) => {
             const result = await pool.request()
                 .input('username', VarChar, username)
                 .query(`SELECT userId FROM users WHERE username = @username`)
-            
+
             res.status(200)
             res.send({ "userId": result.recordset[0].userId, "typeId": 1, "statusId": 1 })
         }
     }
-    catch(err){
+    catch (err) {
         res.status(500);
         res.send(err.message);
     }
@@ -118,6 +133,25 @@ async function verifyAdmin(userId) {
     if (result.recordset[0].name == "Admin") {
         return true;
     } else {
+        return false;
+    }
+}
+
+async function verifyUsername(username) {
+    console.log("\n", username, '\n');
+    const sql = `SELECT * FROM users WHERE USERNAME = @username`;
+    const pool = await poolPromise;
+    const result = await pool.request()
+        .input('username', VarChar, username)
+        .query(sql)
+    if (result.recordset.length == 0) {
+        console.log("\n", "yah boy", '\n');
+
+        return true;
+    }
+    else {
+        console.log("\n", "nah boy", '\n');
+
         return false;
     }
 }
