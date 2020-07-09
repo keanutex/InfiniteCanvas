@@ -82,7 +82,7 @@ router.put('/drawPixel', async (req, res) => {
         }
         colourarray += redistoarray[redistoarray.length-1]
 
-        req.io.sockets.emit('newData', {x: req.body.x, y: req.body.y, r: req.body.r, g: req.body.g, b: req.body.r});
+        req.io.sockets.emit('newData', {x: req.body.x, y: req.body.y, r: req.body.r, g: req.body.g, b: req.body.b});
 
         await client.set('colourarray', colourarray)
 
