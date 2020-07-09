@@ -6,7 +6,6 @@ const redis = require("async-redis");
 const client = redis.createClient();
 
 
-let newPixelVals = [];
 
 /**
  * @swagger
@@ -30,25 +29,6 @@ router.get('/boardState', async (req, res) => {
     }
 });
 
-router.get('/getNew', (req, res) => {
-    res.set({
-        "Content-Type": "text/event-stream",
-        "Cache-Control": "no-cache",
-        "Connection": "keep-alive",
-    
-        // enabling CORS
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Headers":
-          "Origin, X-Requested-With, Content-Type, Accept"
-      })
-
-      res.write('retry: 10000\n\n');
-
-      setInterval(() => {
-        res.write(`data: ${JSON.stringify(newPixelVals)}\n\n`);
-        newPixelVals = [];
-      }, 10000)
-});
 
 /**
  * @swagger
@@ -93,7 +73,7 @@ router.put('/drawPixel', async (req, res) => {
         }
         colourarray += redistoarray[redistoarray.length-1]
 
-        newPixelVals = [...newPixelVals, {x: req.body.x, y: req.body.y, r: req.body.r, g: req.body.g, b: req.body.r}]
+        req.io.sockets.emit('newData', {x: req.body.x, y: req.body.y, r: req.body.r, g: req.body.g, b: req.body.r});
 
         await client.set('colourarray', colourarray)
 
@@ -102,6 +82,7 @@ router.put('/drawPixel', async (req, res) => {
         res.status(500)
         res.send(err.message)
     }
+
 });
 
 /**

@@ -7,6 +7,9 @@ require('dotenv-flow').config({
 async function startUp() {
 
 
+    const server = require('http').createServer();
+    const ioMain = require('socket.io')(server.listen(3030));
+
     const bodyParser = require('body-parser');
     const canvasModule = require('./modules/canvas');
     const accountModule = require('./modules/account');
@@ -15,10 +18,28 @@ async function startUp() {
     const express = require('express');
     const app = express();
     const cors = require('cors');
+    
     await redis.loadDbIntoRedis();
 
     app.use(cors());
     app.use(bodyParser.json());
+
+    ioMain.sockets.on('connection', socket => {
+        console.log("new client");
+        // get that socket and listen to events
+
+        //socket.emit('newData', "connected");
+
+        socket.on('sendnewData', () => {
+            console.log("new data")
+          socket.emit('newData', "connected");
+        });
+    });
+
+    app.use(function(reqSocket, resSocket, next){
+        reqSocket.io = ioMain;
+        next();
+      });
 
     const { reqLogger, resLogger, errLogger } = require('./logging');
     app.use((req, res, next) => {
@@ -46,7 +67,7 @@ async function startUp() {
         next();
     });
 
-    app.listen(process.env.PORT);
+    app.listen(process.env.PORT);   
 
 }
 
