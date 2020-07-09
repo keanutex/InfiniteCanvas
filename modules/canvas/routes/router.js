@@ -58,7 +58,7 @@ router.put('/drawPixel', async (req, res) => {
         let colourarray = await client.get('colourarray');
         let redistoarray = colourarray.split(" ").map(Number)
 
-        var offset = ((req.body.x - 1) * 1000) + (req.body.y - 1)) * 3;
+        var offset = (((req.body.x - 1) * 1000) + (req.body.y - 1)) * 3;
 
         redistoarray[offset] = req.body.r;
         redistoarray[offset + 1] = req.body.g;
