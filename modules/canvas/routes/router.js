@@ -46,7 +46,7 @@ router.get('/boardState', async (req, res) => {
 router.put('/drawPixel', async (req, res) => {
     try {
         const pool = await poolPromise;
-        const result = await pool.request()
+        await pool.request()
             .input('x', Int, req.body.x)
             .input('y', Int, req.body.y)
             .input('r', TinyInt, req.body.r)
@@ -71,7 +71,6 @@ router.put('/drawPixel', async (req, res) => {
         colourarray += redistoarray[redistoarray.length - 1]
         await client.set('colourarray', colourarray)
 
-        res.json(result)
     } catch (err) {
         res.status(500)
         res.send(err.message)
