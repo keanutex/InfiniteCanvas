@@ -4,6 +4,7 @@ const { poolPromise } = require('../../../db');
 const { Int, TinyInt } = require('mssql/msnodesqlv8');
 const redis = require("async-redis");
 const client = redis.createClient();
+const common = require('../../common')
 
 /**
  * @swagger
@@ -19,7 +20,7 @@ const client = redis.createClient();
 router.get('/boardState', async (req, res) => {
     try {
         let colourarray = await client.get('colourarray')
-        redistoarray = colourarray.split(" ").map(Number)
+        let redistoarray = colourarray.split(" ").map(Number)
         res.json({ colour: redistoarray })
     } catch (err) {
         res.status(500)
@@ -46,7 +47,13 @@ router.get('/boardState', async (req, res) => {
 router.put('/drawPixel', async (req, res) => {
     try {
         const pool = await poolPromise;
-        result = await pool.request()
+
+        if (await common.isBlocked(req.body.userId)) {
+            res.status(403).send({ message: "User is blocked" })
+            return;
+        }
+
+        let result = await pool.request()
             .input('x', Int, req.body.x)
             .input('y', Int, req.body.y)
             .input('r', TinyInt, req.body.r)
@@ -71,7 +78,7 @@ router.put('/drawPixel', async (req, res) => {
             colourarray += redistoarray[i] + ' '
         }
         colourarray += redistoarray[redistoarray.length - 1]
-        await client.set('colourarray', colourarray)   
+        await client.set('colourarray', colourarray)
 
     } catch (err) {
         res.status(500)
