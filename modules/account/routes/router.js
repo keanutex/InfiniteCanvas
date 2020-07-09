@@ -6,7 +6,7 @@ const common = require('../../common');
 
 /**
  * @swagger
- * /account/login:
+ * /account/signin:
  *    post:
  *      requestBody:
  *        required: true
@@ -21,21 +21,15 @@ const common = require('../../common');
  *          description: Success
  */
 router.post('/signin', async (req, res) => {
-    let email = req.body.email;
-
-    let AUTH_USER = `SELECT USERID, TYPEID, STATUSID FROM USERS WHERE email = @email;`;
-
     try {
         const pool = await poolPromise;
 
         const result = await pool.request()
-            .input('email', VarChar, email)
-            .query(AUTH_USER)
+            .input('email', VarChar, req.body.email)
+            .query(`SELECT "userId", "typeId", "statusId" FROM users WHERE email = @email`)
 
-        console.log(result);
-
-        if (result != null && result.recordset[0] != null && !common.isBlocked(result.recordset[0].USERID)) {
-            res.status(200).send({ "userId": result.recordset[0].USERID, "typeId": result.recordset[0].TYPEID, "statusId": result.recordset[0].STATUSID });
+        if (result != null && result.recordset[0] != null && !(await common.isBlocked(result.recordset[0].userId))) {
+            res.status(200).send({ "userId": result.recordset[0].userId, "typeId": result.recordset[0].userId, "statusId": result.recordset[0].statusId });
             console.log('Logged in...');
         }
         else {
