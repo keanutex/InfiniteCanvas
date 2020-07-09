@@ -34,7 +34,7 @@ router.post('/signin', async (req, res) => {
 
         console.log(result);
 
-        if (result != null && result.recordset[0] != null && !common.isBlocked(result.recordset[0].userId)) {
+        if (result != null && result.recordset[0] != null && !common.isBlocked(result.recordset[0].USERID)) {
             res.status(200).send({ "userId": result.recordset[0].USERID, "typeId": result.recordset[0].TYPEID, "statusId": result.recordset[0].STATUSID });
             console.log('Logged in...');
         }
