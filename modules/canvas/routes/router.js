@@ -6,6 +6,8 @@ const redis = require("async-redis");
 const client = redis.createClient();
 const common = require('../../common')
 
+
+
 /**
  * @swagger
  * /canvas/boardState:
@@ -27,6 +29,7 @@ router.get('/boardState', async (req, res) => {
         res.send(err.message)
     }
 });
+
 
 /**
  * @swagger
@@ -77,13 +80,17 @@ router.put('/drawPixel', async (req, res) => {
         for (let i = 0; i < redistoarray.length - 1; i++) {
             colourarray += redistoarray[i] + ' '
         }
-        colourarray += redistoarray[redistoarray.length - 1]
+        colourarray += redistoarray[redistoarray.length-1]
+
+        req.io.sockets.emit('newData', {x: req.body.x, y: req.body.y, r: req.body.r, g: req.body.g, b: req.body.r});
+
         await client.set('colourarray', colourarray)
 
     } catch (err) {
         res.status(500)
         res.send(err.message)
     }
+
 });
 
 /**
