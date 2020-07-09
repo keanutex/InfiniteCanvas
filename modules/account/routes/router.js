@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { poolPromise } = require('../../../db');
 const { Int, VarChar } = require('mssql/msnodesqlv8');
+const common = require('../../common');
 
 /**
  * @swagger
@@ -36,7 +37,7 @@ router.post('/signin', async (req, res) => {
 
         console.log(result);
 
-        if (result != null && result.recordset[0] != null) {
+        if (result != null && result.recordset[0] != null && !common.isBlocked(result.recordset[0].userId)) {
             res.status(200).send({ "userId": result.recordset[0].USERID, "typeId": result.recordset[0].TYPEID, "statusId": result.recordset[0].STATUSID });
             console.log('Logged in...');
         }
@@ -81,7 +82,7 @@ router.post('/users', async (req, res) => {
         }
         else {
             res.status(204);
-            res.send({msg:'User Taken'});
+            res.send({ msg: 'User Taken' });
         }
     }
     catch (error) {
