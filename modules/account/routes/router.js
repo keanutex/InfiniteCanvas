@@ -29,7 +29,7 @@ router.post('/signin', async (req, res) => {
             .query(`SELECT "userId", "typeId", "statusId" FROM users WHERE email = @email`)
 
         if (result != null && result.recordset[0] != null && !(await common.isBlocked(result.recordset[0].userId))) {
-            res.status(200).send({ "userId": result.recordset[0].userId, "typeId": result.recordset[0].userId, "statusId": result.recordset[0].statusId });
+            res.status(200).send({ "userId": result.recordset[0].userId, "typeId": result.recordset[0].typeId, "statusId": result.recordset[0].statusId });
             console.log('Logged in...');
         }
         else {
