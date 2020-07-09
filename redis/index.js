@@ -3,20 +3,21 @@ const client = redis.createClient();
 const { poolPromise } = require('../db');
 
 async function loadDbIntoRedis() {
-    let pixelstring = await client.get("pixelstring")
-    //if (pixelstring == null || pixelstring == '') {
-    pixelstring = ''
+    let colourarray = await client.get('colourarray')
+
+    colourarray = ''
     const pool = await poolPromise;
     const result = await pool.request()
-        .query(`SELECT colour from "T-1-1000-1-1000"`)
+        .query(`SELECT r, g, b from "T-1-1000-1-1000"`)
 
-    for (let i = 0; i < result.recordset.length; i++) {
-        pixelstring += result.recordset[i].colour
+    for (let i = 0; i < result.recordset.length-1; i++) {
+        colourarray += result.recordset[i].r +' '+ result.recordset[i].g +' '+ result.recordset[i].b + ' '
     }
-    await client.set("pixelstring", pixelstring)
-    //}
-    console.log("Database loaded into Redis")
+    colourarray += result.recordset[result.recordset.length-1].r +' '+ result.recordset[result.recordset.length-1].g +' '+ result.recordset[result.recordset.length-1].b
+    await client.set('colourarray', colourarray)
 
+    console.log("Database loaded into Redis")
+    //console.log(colourarray)
 }
 
 module.exports = { loadDbIntoRedis }

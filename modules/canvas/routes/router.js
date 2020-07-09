@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { poolPromise } = require('../../../db');
-const { Int, VarChar } = require('mssql/msnodesqlv8');
+const { Int, TinyInt } = require('mssql/msnodesqlv8');
 const redis = require("async-redis");
 const client = redis.createClient();
 
@@ -18,8 +18,9 @@ const client = redis.createClient();
  */
 router.get('/boardState', async (req, res) => {
     try {
-        let pixelstring = await client.get("pixelstring")
-        res.json({ colour: pixelstring })
+        let colourarray = await client.get('colourarray')
+        redistoarray = colourarray.split(" ").map(Number)
+        res.json({ colour: redistoarray })
     } catch (err) {
         res.status(500)
         res.send(err.message)
@@ -45,19 +46,31 @@ router.get('/boardState', async (req, res) => {
 router.put('/drawPixel', async (req, res) => {
     try {
         const pool = await poolPromise;
-        const result = await pool.request()
+        await pool.request()
             .input('x', Int, req.body.x)
             .input('y', Int, req.body.y)
-            .input('colour', VarChar, req.body.colour)
+            .input('r', TinyInt, req.body.r)
+            .input('g', TinyInt, req.body.g)
+            .input('b', TinyInt, req.body.b)
             .input('userId', Int, req.body.userId)
-            .query(`UPDATE "T-1-1000-1-1000" SET colour = @colour, "userId" = @userId WHERE x = @x AND y = @y`)
+            .query(`UPDATE "T-1-1000-1-1000" SET r = @r,g = @g,b = @b, userId = @userId WHERE x = @x AND y = @y`)
 
-        let pixelstring = await client.get("pixelstring")
-        var offset = (req.body.x - 1) * 1000 + (req.body.y - 1) * 4
-        pixelstring = pixelstring.substring(0, offset) + req.body.colour + pixelstring.substring(offset + 4, pixelstring.length);
-        await client.set('pixelstring', pixelstring)
+        let colourarray = await client.get('colourarray');
+        let redistoarray = colourarray.split(" ").map(Number)
 
-        res.json(result.recordset)
+        var offset = ((req.body.x - 1) * 1000) + ((req.body.y - 1) * 3);
+
+        redistoarray[offset] = req.body.r;
+        redistoarray[offset + 1] = req.body.g;
+        redistoarray[offset + 2] = req.body.b;
+
+        colourarray = ''
+        for (let i = 0; i < redistoarray.length - 1; i++) {
+            colourarray += redistoarray[i] + ' '
+        }
+        colourarray += redistoarray[redistoarray.length - 1]
+        await client.set('colourarray', colourarray)
+
     } catch (err) {
         res.status(500)
         res.send(err.message)
@@ -86,7 +99,8 @@ router.post('/getPixelInfo', async (req, res) => {
         const result = await pool.request()
             .input('x', Int, req.body.x)
             .input('y', Int, req.body.y)
-            .query(`SELECT canvas.colour, canvas.userId, users.username FROM "T-1-1000-1-1000" as canvas JOIN users ON users."userId" = canvas."userId"  WHERE x = @x AND y = @y`)
+            .query(`SELECT canvas.r, canvas.g, canvas.b, canvas.userId, users.username FROM "T-1-1000-1-1000" as canvas JOIN users ON users."userId" = canvas."userId"  WHERE x = @x AND y = @y`)
+
         res.json(result.recordset[0])
     } catch (err) {
         res.status(500)
